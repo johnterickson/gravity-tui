@@ -1,5 +1,5 @@
 [package]
-name = "gravity"
+name = "gravity-tui"
 version = "0.1.0"
 edition = "2021"
 

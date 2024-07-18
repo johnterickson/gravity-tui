@@ -3,9 +3,6 @@ use std::thread;
 
 use std::time::Duration;
 
-
-use std::io::stdin;
-
 use ratatui::crossterm::event;
 
 pub enum Event {

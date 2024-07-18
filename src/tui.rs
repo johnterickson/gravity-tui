@@ -25,4 +25,3 @@ pub fn restore() -> io::Result<()> {
     disable_raw_mode()?;
     Ok(())
 }
-

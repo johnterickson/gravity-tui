@@ -1,26 +1,24 @@
 use std::sync::mpsc::Receiver;
 
-use color_eyre::{
-    eyre::WrapErr,
-    Result,
-};
+use color_eyre::{eyre::WrapErr, Result};
 use ratatui::{
     buffer::Buffer,
     crossterm::event::{Event, KeyCode, KeyEvent, KeyEventKind},
     layout::{Alignment, Rect},
-    style::{Style, Stylize},
+    style::{Color, Style, Stylize},
     symbols::{self, border},
-    text::{Line, Text},
+    text::Line,
     widgets::{
-        block::{Position, Title}, Axis, Block, Chart, Dataset, GraphType, Widget
+        block::{Position, Title},
+        Axis, Block, Chart, Dataset, GraphType, Widget,
     },
     Frame,
 };
 use vec2::Vec2;
 
 mod errors;
-mod tui;
 mod events;
+mod tui;
 mod vec2;
 
 #[derive(Clone, Copy, Debug, Default)]
@@ -52,17 +50,16 @@ impl App {
 
     /// updates the application's state based on user input
     fn handle_events(&mut self) -> Result<()> {
-
-
         match self.rx.recv()? {
             // it's important to check that the event is a key press event as
             // crossterm also emits key release and repeat events on Windows.
-            events::Event::Console(Event::Key(key_event)) if key_event.kind == KeyEventKind::Press => self
-                .handle_key_event(key_event)
-                .wrap_err_with(|| format!("handling key event failed:\n{key_event:#?}")),
-            events::Event::DrawInterrupt => {
-                self.run_physics()
+            events::Event::Console(Event::Key(key_event))
+                if key_event.kind == KeyEventKind::Press =>
+            {
+                self.handle_key_event(key_event)
+                    .wrap_err_with(|| format!("handling key event failed:\n{key_event:#?}"))
             }
+            events::Event::DrawInterrupt => self.run_physics(),
             _ => Ok(()),
         }?;
 
@@ -104,8 +101,9 @@ impl App {
 
 impl Widget for &App {
     fn render(self, area: Rect, buf: &mut Buffer) {
-
-        let positions = self.planets.iter()
+        let positions = self
+            .planets
+            .iter()
             .map(|planet| (planet.pos.x, planet.pos.y))
             .collect::<Vec<_>>();
 
@@ -129,6 +127,7 @@ impl Widget for &App {
             "<Q> ".blue().bold(),
         ]));
         let block = Block::bordered()
+            .style(Style::default().bg(Color::Black))
             .title(title.alignment(Alignment::Center))
             .title(
                 instructions
@@ -153,6 +152,7 @@ impl Widget for &App {
 
         // Create the chart and link all the parts together
         let chart = Chart::new(datasets)
+            .style(Style::default().bg(Color::Black))
             .block(Block::new().title("Planets"))
             .x_axis(x_axis)
             .y_axis(y_axis);
@@ -161,7 +161,7 @@ impl Widget for &App {
         //     .centered()
         //     .block(block)
         //     .render(area, buf);
-        
+
         let inner_area = block.inner(area);
         block.render(area, buf);
 
@@ -177,10 +177,22 @@ fn main() -> Result<()> {
         rx: events::spawn_event_threads().1,
         planets: Vec::new(),
     };
-    app.planets.push(Planet { pos: Vec2 {x:  3.0, y:  4.0 }, vel: Vec2 { x: 0.0, y: 0.0 }});
-    app.planets.push(Planet { pos: Vec2 {x: -3.0, y:  4.0 }, vel: Vec2 { x: 0.0, y: 0.0 }});
-    app.planets.push(Planet { pos: Vec2 {x: -3.0, y: -4.0 }, vel: Vec2 { x: 0.0, y: 0.0 }});
-    app.planets.push(Planet { pos: Vec2 {x:  3.0, y: -4.0 }, vel: Vec2 { x: 0.0, y: 0.0 }});
+    app.planets.push(Planet {
+        pos: Vec2 { x: 3.0, y: 4.0 },
+        vel: Vec2 { x: 0.0, y: 0.0 },
+    });
+    app.planets.push(Planet {
+        pos: Vec2 { x: -3.0, y: 4.0 },
+        vel: Vec2 { x: 0.0, y: 0.0 },
+    });
+    app.planets.push(Planet {
+        pos: Vec2 { x: -3.0, y: -4.0 },
+        vel: Vec2 { x: 0.0, y: 0.0 },
+    });
+    app.planets.push(Planet {
+        pos: Vec2 { x: 3.0, y: -4.0 },
+        vel: Vec2 { x: 0.0, y: 0.0 },
+    });
     app.run(&mut terminal)?;
     tui::restore()?;
     Ok(())
